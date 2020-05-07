@@ -1,6 +1,5 @@
 package com.cms.dbmongo.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -8,6 +7,9 @@ import org.springframework.stereotype.Service;
 import com.cms.dbmongo.models.Category;
 import com.cms.dbmongo.repository.CategoryRepository;
 import com.cms.dbmongo.vo.CategoryRequest;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class CategoryService {
@@ -18,28 +20,30 @@ public class CategoryService {
 		this.categoryRepository = categoryRepository;
 	}
 	
-	public Category create(CategoryRequest request) {
+	public Mono<Category> create(CategoryRequest request) {
 		Category category = new Category();
 		category.setName(request.getName());
 		return this.categoryRepository.save(category);
 	}
 	
-	public Category update(Category category) {
-		return this.categoryRepository.save(category);
+	public Mono<Category> update(String id, CategoryRequest category) {
+		return this.categoryRepository.findById(id).flatMap(
+				categoryDatabase -> {
+					categoryDatabase.setName(category.getName());
+					return this.categoryRepository.save(categoryDatabase);
+				});
 	}
 	
 	public void delete(String id) {
-		final Optional<Category> category = this.categoryRepository.findById(id);
-		this.categoryRepository.delete(category.get());
+		this.categoryRepository.deleteById(id);
 	}
 	
-	public List<Category> findAll() {
+	public Flux<Category> findAll() {
 		return this.categoryRepository.findAll();
 	}
 	
-	public Category findOne(String id) {
-		Optional<Category> category = this.categoryRepository.findById(id);
-		return category.get();
+	public Mono<Category> findOne(String id) {
+		return this.categoryRepository.findById(id);
 	}
 	
 }
